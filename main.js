@@ -197,14 +197,33 @@ async function saveModal() {
   saveBtn.textContent = 'Save';
 
   if (error) { toast('Save failed: ' + error.message); return; }
+
+  // Optimistic update: reflect the change immediately without waiting for realtime echo
+  if (editingId) {
+    const existing = candidates.find(c => c.id === editingId);
+    if (existing) upsertLocal({ ...existing, ...payload });
+    render();
+    flashRow(editingId);
+  }
+  // Inserts will arrive via realtime INSERT event — no optimistic needed
+
   closeModal();
   toast(editingId ? 'Candidate updated' : 'Candidate added');
 }
 
 // ── Status inline update ──────────────────────────────────────────────────────
 async function updateStatus(id, status) {
+  // Optimistic: update local cache immediately (dropdown class already swapped in handler)
+  const existing = candidates.find(c => c.id === id);
+  if (existing) upsertLocal({ ...existing, status });
+
   const { error } = await db.from('candidates').update({ status }).eq('id', id);
-  if (error) { toast('Status update failed'); await loadCandidates(); }
+  if (error) {
+    toast('Status update failed');
+    // Revert optimistic change
+    if (existing) upsertLocal(existing);
+    render();
+  }
 }
 
 // ── PDF ───────────────────────────────────────────────────────────────────────
@@ -227,6 +246,10 @@ async function uploadPdf(id, file) {
     .eq('id', id);
 
   if (dbErr) { toast('Failed to save PDF link'); return; }
+
+  // Optimistic update
+  const existing = candidates.find(c => c.id === id);
+  if (existing) { upsertLocal({ ...existing, pdf_url: publicUrl, pdf_filename: file.name }); render(); flashRow(id); }
   toast('PDF uploaded');
 }
 
@@ -238,6 +261,10 @@ async function deletePdf(id) {
   if (storagePath) await db.storage.from('resumes').remove([storagePath]);
 
   await db.from('candidates').update({ pdf_url: null, pdf_filename: null }).eq('id', id);
+
+  // Optimistic update
+  const c = candidates.find(x => x.id === id);
+  if (c) { upsertLocal({ ...c, pdf_url: null, pdf_filename: null }); render(); }
   toast('PDF removed');
 }
 
@@ -253,6 +280,10 @@ async function deleteCandidate(id) {
 
   const { error } = await db.from('candidates').delete().eq('id', id);
   if (error) { toast('Delete failed'); return; }
+
+  // Optimistic update: remove row immediately without waiting for realtime echo
+  removeLocal(id);
+  render();
   toast('Candidate deleted');
 }
 
