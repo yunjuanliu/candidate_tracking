@@ -189,23 +189,29 @@ async function saveModal() {
   saveBtn.disabled = true;
   saveBtn.textContent = 'Saving…';
 
-  const { error } = editingId
-    ? await db.from('candidates').update(payload).eq('id', editingId)
-    : await db.from('candidates').insert(payload);
+  let error, newRow;
+  if (editingId) {
+    ({ error } = await db.from('candidates').update(payload).eq('id', editingId));
+  } else {
+    ({ error, data: newRow } = await db.from('candidates').insert(payload).select().single());
+  }
 
   saveBtn.disabled = false;
   saveBtn.textContent = 'Save';
 
   if (error) { toast('Save failed: ' + error.message); return; }
 
-  // Optimistic update: reflect the change immediately without waiting for realtime echo
+  // Immediately reflect the change without waiting for realtime echo
   if (editingId) {
     const existing = candidates.find(c => c.id === editingId);
     if (existing) upsertLocal({ ...existing, ...payload });
     render();
     flashRow(editingId);
+  } else if (newRow) {
+    upsertLocal(newRow);
+    render();
+    flashRow(newRow.id);
   }
-  // Inserts will arrive via realtime INSERT event — no optimistic needed
 
   closeModal();
   toast(editingId ? 'Candidate updated' : 'Candidate added');
