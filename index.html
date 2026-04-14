@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Candidate Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <h1>Candidate <span>Tracker</span></h1>
+  <div class="header-actions">
+    <button class="btn-secondary" id="exportBtn">Export CSV</button>
+    <button class="btn-primary"   id="addBtn">+ Add Candidate</button>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <div id="tableContainer" class="loading">Loading candidates…</div>
+  </div>
+</main>
+
+<!-- Add / Edit modal -->
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Candidate</h2>
+      <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="fieldName">Name *</label>
+        <input id="fieldName" type="text" placeholder="Jane Smith" />
+      </div>
+      <div class="field">
+        <label for="fieldLocation">Location</label>
+        <input id="fieldLocation" type="text" placeholder="San Francisco, CA" />
+      </div>
+      <div class="field">
+        <label for="fieldJob">Current Job</label>
+        <input id="fieldJob" type="text" placeholder="Senior Engineer at Acme" />
+      </div>
+      <div class="field">
+        <label for="fieldContact">Contact</label>
+        <input id="fieldContact" type="text" placeholder="jane@example.com / LinkedIn URL" />
+      </div>
+      <div class="field">
+        <label for="fieldStatus">Status</label>
+        <select id="fieldStatus">
+          <option value="Awaiting">Awaiting</option>
+          <option value="Done">Done</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="modalCancel">Cancel</button>
+      <button class="btn-primary"   id="modalSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>
